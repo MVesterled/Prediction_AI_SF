@@ -1,25 +1,65 @@
 import cv2
 import numpy as np
+from pathlib import Path
 
 ############# Player detection and attack inference #############
 
 
 ############# Load and preprocess image #############
 # Load picture
-image = cv2.imread(r"C:\Users\mathi\OneDrive\Uni\SanFran\Undervisning\AI\VSCodeVirtual\Soccer_AI\Soccerfield4.png")
+BASE_DIR = Path(__file__).resolve().parent  # fallback til Path.cwd() hvis du kører i REPL
+# Dir with video
+VIDEO_DIR = BASE_DIR / "images_vision"
+# Image file
+IMG_PATH = VIDEO_DIR / "Soccerfield3.png"
+image = cv2.imread(IMG_PATH)
 if image is None:
     print("Couldn't load file, check path")
     raise SystemExit
 
 # Normalize size for consistent processing
 resized_image = cv2.resize(image, (1000, 1000))
-cv2.imshow("Original", resized_image)
-cv2.waitKey(0)
+#cv2.imshow("Original", resized_image)
+#cv2.waitKey(0)
 
 # Convert to HSV once
 hsv = cv2.cvtColor(resized_image, cv2.COLOR_BGR2HSV)
 
 ############# Load and preprocess image - END #############
+
+################# Save to docs/ ############
+
+def save_field_attack_summary(red_attackers: int,
+                              blue_attackers: int,
+                              filename: str = "field_data.txt",
+                              overwrite: bool = True) -> Path:
+
+    if red_attackers > blue_attackers:
+        verdict = "Therefore, Liverpool is currently attacking."
+    elif blue_attackers > red_attackers:
+        verdict = "Therefore, Chelsea is currently attacking."
+    else:
+        verdict = "Therefore, the attack is currently balanced."
+
+    sentence = (
+        f"In the image of the field, Liverpool plays at home on the top half. "
+        f"Attackers: Liverpool {red_attackers}, Chelsea {blue_attackers}. "
+        f"{verdict}"
+    )
+
+    base_dir = Path(__file__).resolve().parent if "__file__" in globals() else Path.cwd()
+    out_dir = base_dir / "docs"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    target = out_dir / filename
+
+    mode = "w" if overwrite else "a"
+    with target.open(mode, encoding="utf-8") as f:
+        f.write(sentence + "\n")
+
+    return target.resolve()
+
+
+################ Save to docs/ - END  #################
 
 ############# Detect players by colormask and finding circles #############
 # --- Color masks ---
@@ -70,8 +110,8 @@ red_circles  = find_circles_from_mask(red_mask_clean,  (0, 0, 255), resized_imag
 blue_circles = find_circles_from_mask(blue_mask_clean, (255, 0, 0), resized_image)
 
 # Show masks for debugging
-cv2.imshow("Red mask (clean)", red_mask_clean)
-cv2.imshow("Blue mask (clean)", blue_mask_clean)
+#cv2.imshow("Red mask (clean)", red_mask_clean)
+#cv2.imshow("Blue mask (clean)", blue_mask_clean)
 
 ############# Detect players by colormask and finding circles - END #############
 
@@ -130,9 +170,12 @@ print(f"Attack:", attack_team)
 ################# Is attacking - END  #################
 
 # Final visualization
-cv2.imshow("Detected players (red + blue)", resized_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+#cv2.imshow("Detected players (red + blue)", resized_image)
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
+
+save_field_attack_summary(red_attackers, blue_attackers)
+
 
 
 
