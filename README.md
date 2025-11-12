@@ -30,7 +30,7 @@ pip install -r requirements.txt
 bash
 ollama pull mistral:latest
 ollama pull nomic-embed-text
-3) Index your docs
+3) Index your docs - The vision is made, so that if the code is ran (each file) .txt will be placed in \docs
 Place your files in ./docs (kept out of git), then:
 
 bash
