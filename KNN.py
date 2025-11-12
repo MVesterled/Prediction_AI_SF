@@ -13,7 +13,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, confu
 import joblib
 
 # 1) Load data
-games = pd.read_csv("Soccer_data_three_seasons.csv")
+games = pd.read_csv("data/Soccer_data_three_seasons.csv")
 
 # 2) Select features/target (your original set)
 FEATURES = ['B365H', 'B365D', 'B365A', 'AvgH', 'AvgD', 'AvgA',
