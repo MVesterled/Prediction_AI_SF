@@ -2,6 +2,7 @@ import os, re, json, csv, hashlib
 import requests
 import chromadb
 from pypdf import PdfReader
+import subprocess, sys, pathlib
 
 # ===== Optional: ML prediction hook =====
 try:
@@ -252,6 +253,36 @@ def run_prediction_from_json(json_str: str) -> str:
         return f"Prediction error: {e}"
     return "Prediction:\n" + json.dumps(result, indent=2)
 
+def run_vision_script() -> str:
+    """
+    Runs the local vision.py in a separate process and returns its stdout/stderr.
+    Note: vision.py opens OpenCV windows and will block until you press a key.
+    """
+    script_path = pathlib.Path(__file__).with_name("vision.py")
+    if not script_path.exists():
+        return f"vision.py not found next to rag.py at: {script_path}"
+
+    # Use the current Python (venv) to run vision.py
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        out = (proc.stdout or "").strip()
+        err = (proc.stderr or "").strip()
+        summary = []
+        summary.append(f"Exit code: {proc.returncode}")
+        if out:
+            summary.append("STDOUT:\n" + out)
+        if err:
+            summary.append("STDERR:\n" + err)
+        return "\n".join(summary) if summary else f"Process finished with code {proc.returncode}"
+    except Exception as e:
+        return f"Failed to run vision.py: {e}"
+
+
 # =======================
 # Interactive Chat
 # =======================
@@ -274,6 +305,9 @@ def chat():
             json_part = q[len("/predict"):].strip()
             print("\nPREDICT >", run_prediction_from_json(json_part))
             continue
+        if q.strip().lower() == "/vision":
+            print("\nVISION >", run_vision_script())
+            continue
         try:
             ans = answer_question(q)
             print("\nRAG >", ans)
@@ -290,6 +324,7 @@ if __name__ == "__main__":
     parser.add_argument("--ask", type=str, help="Ask a question against the local index")
     parser.add_argument("--chat", action="store_true", help="Interactive local chat (RAG)")
     parser.add_argument("--predict", type=str, help='Run prediction with a JSON string, e.g. --predict "{\"B365H\":1.9, ...}"')
+    parser.add_argument("--vision", action="store_true", help="Run the bundled vision.py once")
     args = parser.parse_args()
 
     if args.build:
@@ -302,6 +337,9 @@ if __name__ == "__main__":
 
     if args.predict:
         print(run_prediction_from_json(args.predict))
+
+    if args.vision:
+        print(run_vision_script())
 
     if args.chat:
         chat()
