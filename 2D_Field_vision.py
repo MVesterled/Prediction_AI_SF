@@ -43,7 +43,7 @@ def save_field_attack_summary(red_attackers: int,
 
     sentence = (
         f"In the image of the field, Liverpool plays at home on the top half. "
-        f"Attackers: Liverpool {red_attackers}, Chelsea {blue_attackers}. "
+        f"Liverpool has {red_attackers} Attackers, and Chelsea has {blue_attackers} Attackers. "
         f"{verdict}"
     )
 
